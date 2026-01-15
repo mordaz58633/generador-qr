@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generador QR - Kimi</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Librería QR sin dependencias -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Generador de Código QR</h1>
+    <input id="texto" type="text" placeholder="Texto o URL" />
+    <button onclick="generarQR()">Generar QR</button>
+    <div id="qrcode" class="qr-box"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
