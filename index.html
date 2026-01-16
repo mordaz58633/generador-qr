@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Códigos QR</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        input[type="tel"],
+        input[type="email"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .qr-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .type-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .type-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .type-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        .qr-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            min-height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #qrcode {
+            display: inline-block;
+        }
+
+        .download-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: none;
+            margin: 0 10px;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .success-message {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .qr-type-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Generador de QR</h1>
+        
+        <div class="qr-type-selector">
+            <button class="type-btn active" data-type="text">Texto</button>
+            <button class="type-btn" data-type="url">URL</button>
+            <button class="type-btn" data-type="wifi">WiFi</button>
+            <button class="type-btn" data-type="contact">Contacto</button>
+            <button class="type-btn" data-type="sms">SMS</button>
+        </div>
+
+        <div id="input-forms">
+            <!-- Formulario de Texto -->
+            <div class="input-group" id="text-form">
+                <label for="text-input">Texto o mensaje:</label>
+                <textarea id="text-input" placeholder="Ingresa el texto que quieres convertir a QR..."></textarea>
+            </div>
+
+            <!-- Formulario de URL -->
+            <div class="input-group hidden" id="url-form">
+                <label for="url-input">URL:</label>
+                <input type="url" id="url-input" placeholder="https://ejemplo.com">
+            </div>
+
+            <!-- Formulario de WiFi -->
+            <div class="input-group hidden" id="wifi-form">
+                <label for="wifi-ssid">Nombre de red (SSID):</label>
+                <input type="text" id="wifi-ssid" placeholder="MiRedWiFi">
+                
+                <label for="wifi-password">Contraseña:</label>
+                <input type="text" id="wifi-password" placeholder="Contraseña">
+                
+                <label for="wifi-security">Tipo de seguridad:</label>
+                <select id="wifi-security">
+                    <option value="WPA">WPA/WPA2</option>
+                    <option value="WEP">WEP</option>
+                    <option value="nopass">Sin contraseña</option>
+                </select>
+            </div>
+
+            <!-- Formulario de Contacto -->
+            <div class="input-group hidden" id="contact-form">
+                <label for="contact-name">Nombre:</label>
+                <input type="text" id="contact-name" placeholder="Juan Pérez">
+                
+                <label for="contact-phone">Teléfono:</label>
+                <input type="tel" id="contact-phone" placeholder="+1234567890">
+                
+                <label for="contact-email">Email:</label>
+                <input type="email" id="contact-email" placeholder="juan@ejemplo.com">
+                
+                <label for="contact-company">Empresa:</label>
+                <input type="text" id="contact-company" placeholder="Empresa S.A.">
+            </div>
+
+            <!-- Formulario de SMS -->
+            <div class="input-group hidden" id="sms-form">
+                <label for="sms-phone">Número de teléfono:</label>
+                <input type="tel" id="sms-phone" placeholder="+1234567890">
+                
+                <label for="sms-message">Mensaje:</label>
+                <textarea id="sms-message" placeholder="Escribe tu mensaje aquí..."></textarea>
+            </div>
+        </div>
+
+        <button class="generate-btn" onclick="generateQR()">Generar Código QR</button>
+
+        <div class="error-message" id="error-message"></div>
+        <div class="success-message" id="success-message"></div>
+
+        <div class="qr-container">
+            <div id="qrcode"></div>
+        </div>
+
+        <div class="button-group">
+            <button class="download-btn" id="download-png" onclick="downloadQR('png')">Descargar PNG</button>
+            <button class="download-btn" id="download-svg" onclick="downloadQR('svg')">Descargar SVG</button>
+        </div>
+    </div>
+
+    <script>
+        let qrcode = null;
+        let currentType = 'text';
+
+        // Cambiar entre tipos de QR
+        document.querySelectorAll('.type-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                currentType = this.dataset.type;
+                
+                // Ocultar todos los formularios
+                document.querySelectorAll('#input-forms > div').forEach(form => {
+                    form.classList.add('hidden');
+                });
+                
+                // Mostrar el formulario correspondiente
+                document.getElementById(`${currentType}-form`).classList.remove('hidden');
+                
+                // Limpiar QR anterior
+                clearQR();
+            });
+        });
+
+        function clearQR() {
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            document.querySelectorAll('.download-btn').forEach(btn => btn.style.display = 'none');
+            hideMessages();
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => successDiv.style.display = 'none', 3000);
+        }
+
+        function hideMessages() {
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+        }
+
+        function getQRData() {
+            switch(currentType) {
+                case 'text':
+                    return document.getElementById('text-input').value.trim();
+                
+                case 'url':
+                    const url = document.getElementById('url-input').value.trim();
+                    if (url && !url.match(/^https?:\/\//)) {
+                        return 'https://' + url;
+                    }
+                    return url;
+                
+                case 'wifi':
+                    const ssid = document.getElementById('wifi-ssid').value.trim();
+                    const password = document.getElementById('wifi-password').value.trim();
+                    const security = document.getElementById('wifi-security').value;
+                    
+                    if (!ssid) return '';
+                    
+                    if (security === 'nopass') {
+                        return `WIFI:T:nopass;S:${ssid};P:;;`;
+                    } else {
+                        return `WIFI:T:${security};S:${ssid};P:${password};;`;
+                    }
+                
+                case 'contact':
+                    const name = document.getElementById('contact-name').value.trim();
+                    const phone = document.getElementById('contact-phone').value.trim();
+                    const email = document.getElementById('contact-email').value.trim();
+                    const company = document.getElementById('contact-company').value.trim();
+                    
+                    if (!name && !phone && !email) return '';
+                    
+                    let vcard = 'BEGIN:VCARD\nVERSION:3.0\n';
+                    if (name) vcard += `FN:${name}\n`;
+                    if (phone) vcard += `TEL:${phone}\n`;
+                    if (email) vcard += `EMAIL:${email}\n`;
+                    if (company) vcard += `ORG:${company}\n`;
+                    vcard += 'END:VCARD';
+                    
+                    return vcard;
+                
+                case 'sms':
+                    const smsPhone = document.getElementById('sms-phone').value.trim();
+                    const smsMessage = document.getElementById('sms-message').value.trim();
+                    
+                    if (!smsPhone) return '';
+                    
+                    return `SMSTO:${smsPhone}:${smsMessage}`;
+                
+                default:
+                    return '';
+            }
+        }
+
+        function generateQR() {
+            hideMessages();
+            
+            const data = getQRData();
+            
+            if (!data) {
+                showError('Por favor, completa al menos un campo');
+                return;
+            }
+
+            // Limpiar QR anterior
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+
+            // Generar nuevo QR
+            try {
+                qrcode = new QRCode(qrContainer, {
+                    text: data,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                // Mostrar botones de descarga
+                setTimeout(() => {
+                    document.querySelectorAll('.download-btn').forEach(btn => btn.style.display = 'inline-block');
+                    showSuccess('¡Código QR generado exitosamente!');
+                }, 100);
+                
+            } catch (error) {
+                showError('Error al generar el código QR');
+                console.error(error);
+            }
+        }
+
+        function downloadQR(format) {
+            if (!qrcode) {
+                showError('Primero genera un código QR');
+                return;
+            }
+
+            const canvas = document.querySelector('#qrcode canvas');
+            const img = document.querySelector('#qrcode img');
+
+            if (format === 'png' && canvas) {
+                // Descargar como PNG
+                const link = document.createElement('a');
+                link.download = `codigo-qr-${Date.now()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+                showSuccess('¡Código QR descargado como PNG!');
+                
+            } else if (format === 'svg' && img) {
+                // Descargar como SVG
+                const svgData = new XMLSerializer().serializeToString(img);
+                const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                const svgUrl = URL.createObjectURL(svgBlob);
+                
+                const link = document.createElement('a');
+                link.download = `codigo-qr-${Date.now()}.svg`;
+                link.href = svgUrl;
+                link.click();
+                
+                URL.revokeObjectURL(svgUrl);
+                showSuccess('¡Código QR descargado como SVG!');
+            }
+        }
+
+        // Generar QR con Enter
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                generateQR();
+            }
+        });
+    </script>
+</body>
+</html>
